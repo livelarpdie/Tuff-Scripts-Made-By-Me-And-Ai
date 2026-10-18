@@ -4,6 +4,7 @@
     - Fixed !servcheck (fixed ID mismatch causing it to fail silently)
     - Centered notifications so you can see command feedback
     - Hover = White, Click = Red, Rich = Green
+    - Shows commands menu on execute
 ]]
 
 local Players            = game:GetService("Players")
@@ -30,9 +31,18 @@ local screenGui = nil
 local currentPlayer = nil
 local fetchId = 0
 local hoveredPlayer = nil
+local panel, viewportFrame -- Forward declaration to prevent nil errors
 
 local function trackConnection(connection)
     table.insert(connections, connection)
+end
+
+-- Moved create() to the top so it can be used by Highlight instances below
+local function create(className, props, parent)
+    local obj = Instance.new(className)
+    for k, v in pairs(props or {}) do obj[k] = v end
+    if parent then obj.Parent = parent end
+    return obj
 end
 
 -- ============================================================
@@ -77,12 +87,7 @@ end
 -- ============================================================
 -- HELPERS
 -- ============================================================
-local function create(className, props, parent)
-    local obj = Instance.new(className)
-    for k, v in pairs(props or {}) do obj[k] = v end
-    if parent then obj.Parent = parent end
-    return obj
-end
+-- create() was moved up
 
 local function comma(n)
     n = math.floor(tonumber(n) or 0)
@@ -241,7 +246,7 @@ local function notify(text)
 end
 
 -- 3D MODEL VIEWPORT
-local viewportFrame = create("ViewportFrame", {
+viewportFrame = create("ViewportFrame", { -- Removed 'local' here to use the forward-declared variable
     Name = "ModelViewport",
     Size = UDim2.new(0, 380, 0, 550),
     AnchorPoint = Vector2.new(1, 0.5),
@@ -302,7 +307,7 @@ end))
 local PANEL_WIDTH, PANEL_HEIGHT = 440, 650
 local PANEL_HIDDEN_X, PANEL_SHOWN_X = 460, -20
 
-local panel = create("Frame", {
+panel = create("Frame", { -- Removed 'local' here to use the forward-declared variable
     Name = "MainPanel", Size = UDim2.new(0, PANEL_WIDTH, 0, PANEL_HEIGHT), AnchorPoint = Vector2.new(1, 0.5),
     Position = UDim2.new(1, PANEL_HIDDEN_X, 0.5, 0), BackgroundColor3 = Color3.fromRGB(12, 12, 12),
     BorderSizePixel = 0, Visible = false, ClipsDescendants = true, Parent = screenGui,
@@ -877,3 +882,8 @@ trackConnection(UserInputService.InputBegan:Connect(function(input, gameProcesse
         end
     end
 end))
+
+-- ============================================================
+-- SHOW COMMANDS MENU ON EXECUTE
+-- ============================================================
+cmdsPopup.Visible = true
